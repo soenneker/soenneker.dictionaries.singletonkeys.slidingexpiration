@@ -11,7 +11,6 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
 {
     public SlidingExpirationSingletonKeyDictionaryTests(Host host) : base(host)
     {
-
     }
 
     [Test]
@@ -68,11 +67,12 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
         var calls = 0;
         var disposed = 0;
 
-        var dict = new SlidingExpirationSingletonKeyDictionary<string, DisposableValue>(TimeSpan.FromMilliseconds(60), key =>
-        {
-            Interlocked.Increment(ref calls);
-            return new DisposableValue(() => Interlocked.Increment(ref disposed));
-        });
+        var dict = new SlidingExpirationSingletonKeyDictionary<string, DisposableValue>(TimeSpan.FromMilliseconds(60),
+            key =>
+            {
+                Interlocked.Increment(ref calls);
+                return new DisposableValue(() => Interlocked.Increment(ref disposed));
+            });
 
         DisposableValue first = await dict.Get("a");
 
@@ -131,7 +131,8 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
         Task<string> first = Get("a");
         Task<string> second = Get("b");
 
-        bool bothFactoriesStarted = await Task.WhenAny(bothStarted.Task, Task.Delay(TimeSpan.FromSeconds(1))) == bothStarted.Task;
+        bool bothFactoriesStarted = await Task.WhenAny(bothStarted.Task, Task.Delay(TimeSpan.FromSeconds(1))) ==
+                                    bothStarted.Task;
 
         bothStarted.TrySetResult();
         release.TrySetResult();
