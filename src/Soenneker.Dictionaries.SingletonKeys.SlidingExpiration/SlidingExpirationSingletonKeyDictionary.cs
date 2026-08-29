@@ -8,7 +8,7 @@ using Soenneker.Extensions.ValueTask;
 
 namespace Soenneker.Dictionaries.SingletonKeys.SlidingExpiration;
 
-/// <inheritdoc cref="ISlidingExpirationSingletonKeyDictionary{TKey,TValue}"/>
+/// <inheritdoc cref="ISlidingExpirationSingletonKeyDictionary{TKey, TValue}"/>
 public sealed class SlidingExpirationSingletonKeyDictionary<TKey, TValue> : ISlidingExpirationSingletonKeyDictionary<TKey, TValue>
     where TKey : notnull
 {
