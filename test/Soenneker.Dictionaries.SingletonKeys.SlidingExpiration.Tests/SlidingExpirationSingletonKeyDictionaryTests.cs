@@ -148,4 +148,13 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
             return await dict.Get(key);
         }
     }
+
+    [Test]
+    public void Constructor_rejects_expiration_beyond_timer_range()
+    {
+        Action action = () => _ = new SlidingExpirationSingletonKeyDictionary<string, object>(
+            TimeSpan.FromMilliseconds(4_294_967_295D), _ => new object());
+
+        action.Should().Throw<ArgumentOutOfRangeException>();
+    }
 }

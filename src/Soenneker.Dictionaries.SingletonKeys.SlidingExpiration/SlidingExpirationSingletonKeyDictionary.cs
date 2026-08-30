@@ -12,6 +12,7 @@ namespace Soenneker.Dictionaries.SingletonKeys.SlidingExpiration;
 public sealed class SlidingExpirationSingletonKeyDictionary<TKey, TValue> : ISlidingExpirationSingletonKeyDictionary<TKey, TValue>
     where TKey : notnull
 {
+    private const double _maxTimerMilliseconds = 4_294_967_294D;
     private readonly ConcurrentDictionary<TKey, SlidingExpirationEntry<TKey, TValue>> _entries = new();
     private readonly long _slidingExpirationMilliseconds;
 
@@ -657,8 +658,9 @@ public sealed class SlidingExpirationSingletonKeyDictionary<TKey, TValue> : ISli
 
     private static void ValidateSlidingExpiration(TimeSpan slidingExpiration)
     {
-        if (slidingExpiration <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(slidingExpiration), "Sliding expiration must be greater than zero.");
+        if (slidingExpiration <= TimeSpan.Zero || slidingExpiration.TotalMilliseconds > _maxTimerMilliseconds)
+            throw new ArgumentOutOfRangeException(nameof(slidingExpiration),
+                "Sliding expiration must be greater than zero and no more than 4,294,967,294 milliseconds.");
     }
 
     private static void DisposeValueSync(TValue? value)

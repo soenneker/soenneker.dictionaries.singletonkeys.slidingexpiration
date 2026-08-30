@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,7 +24,6 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// <param name="key">Key used to locate the target entry.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A task whose result is the value returned by get.</returns>
-    [Pure]
     ValueTask<TValue> Get(TKey key, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -35,7 +33,6 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// <param name="key">Key used to locate the target entry.</param>
     /// <param name="value">Receives the matching value when the lookup succeeds.</param>
     /// <returns>true if the requested update was applied; otherwise, false.</returns>
-    [Pure]
     bool TryGet(TKey key, out TValue? value);
 
     /// <summary>
@@ -45,7 +42,6 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// <param name="key">Key used to locate the target entry.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The resulting value.</returns>
-    [Pure]
     TValue GetSync(TKey key, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -57,7 +53,6 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// <param name="keyFactory">Function that derives a key from the supplied state.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A task whose result is the value returned by get.</returns>
-    [Pure]
     ValueTask<TValue> Get<TState>(TState state, Func<TState, TKey> keyFactory, CancellationToken cancellationToken = default) where TState : notnull;
 
     /// <summary>
@@ -69,7 +64,6 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// <param name="keyFactory">Function that derives a key from the supplied state.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The resulting value.</returns>
-    [Pure]
     TValue GetSync<TState>(TState state, Func<TState, TKey> keyFactory, CancellationToken cancellationToken = default) where TState : notnull;
 
     /// <summary>
@@ -176,7 +170,6 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// Retrieves a snapshot of all cached key/value pairs without resetting sliding expirations.
     /// </summary>
     /// <returns>The requested dictionary.</returns>
-    [Pure]
     Dictionary<TKey, TValue> GetAllSync();
 
     /// <summary>
@@ -184,14 +177,12 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A task whose result is the requested dictionary.</returns>
-    [Pure]
     ValueTask<Dictionary<TKey, TValue>> GetAll(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a snapshot of all cached keys without resetting sliding expirations.
     /// </summary>
     /// <returns>The requested collection.</returns>
-    [Pure]
     List<TKey> GetKeysSync();
 
     /// <summary>
@@ -199,14 +190,12 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A task whose result is the collection returned by get Keys.</returns>
-    [Pure]
     ValueTask<List<TKey>> GetKeys(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a snapshot of all cached values without resetting sliding expirations.
     /// </summary>
     /// <returns>The requested collection.</returns>
-    [Pure]
     List<TValue> GetValuesSync();
 
     /// <summary>
@@ -214,7 +203,6 @@ public interface ISlidingExpirationSingletonKeyDictionary<TKey, TValue> : IDispo
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A task whose result is the collection returned by get Values.</returns>
-    [Pure]
     ValueTask<List<TValue>> GetValues(CancellationToken cancellationToken = default);
 
     /// <summary>

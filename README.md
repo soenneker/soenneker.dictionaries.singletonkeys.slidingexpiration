@@ -1,57 +1,55 @@
 [![](https://img.shields.io/nuget/v/soenneker.dictionaries.singletonkeys.slidingexpiration.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.dictionaries.singletonkeys.slidingexpiration/)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.dictionaries.singletonkeys.slidingexpiration/publish-package.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.dictionaries.singletonkeys.slidingexpiration/actions/workflows/publish-package.yml)
 [![](https://img.shields.io/nuget/dt/soenneker.dictionaries.singletonkeys.slidingexpiration.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.dictionaries.singletonkeys.slidingexpiration/)
+[![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.dictionaries.singletonkeys.slidingexpiration/codeql.yml?label=CodeQL&style=for-the-badge)](https://github.com/soenneker/soenneker.dictionaries.singletonkeys.slidingexpiration/actions/workflows/codeql.yml)
 
 # Soenneker.Dictionaries.SingletonKeys.SlidingExpiration
 
-A keyed singleton cache that disposes values after they have not been retrieved for the configured sliding expiration.
+A keyed singleton cache that refreshes a per-entry idle timer on retrieval and disposes values after the timer expires.
 
-## Install
+## Installation
 
 ```bash
 dotnet add package Soenneker.Dictionaries.SingletonKeys.SlidingExpiration
 ```
 
-## Quick start
+## Usage
 
 ```csharp
-using Soenneker.Dictionaries.SingletonKeys.SlidingExpiration.Abstract;
+using Soenneker.Dictionaries.SingletonKeys.SlidingExpiration;
 
-ISlidingExpirationSingletonKeyDictionary<TKey, TValue> slidingExpirationSingletonKeyDictionary = /* resolve from DI */;
-var result = await slidingExpirationSingletonKeyDictionary.Get(/* supply key */ default!, default);
+await using var results = new SlidingExpirationSingletonKeyDictionary<string, LookupResult>(
+    slidingExpiration: TimeSpan.FromMinutes(5),
+    func: async (key, cancellationToken) =>
+        await LoadResult(key, cancellationToken));
+
+LookupResult result = await results.Get("customer:42", cancellationToken);
 ```
 
-Retrieves the singleton value associated with `key`, creating and caching it if it does not already exist. Successful retrieval resets that key's sliding expiration.
+Concurrent requests for one missing key share one factory execution. Different keys initialize concurrently. Factory failures are not cached, so a later request can retry.
 
-## What you get
+`Get`, `GetSync`, and a successful `TryGet` restart the key’s expiration from the time of that retrieval. Snapshot methods do not refresh expiration. When a timer fires, the value is removed and disposed; a later `Get` creates a replacement.
 
-- `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>` — A keyed singleton cache that disposes values after they have not been retrieved for the configured sliding expiration.
+The expiration must be positive and no greater than `4,294,967,294` milliseconds, the supported `System.Threading.Timer` range.
 
-## API at a glance
+## Important lifetime limitation
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.SlidingExpiration` | Gets the idle duration after which a cached value is evicted when it has not been retrieved. | Gets the idle duration after which a cached value is evicted when it has not been retrieved. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.Get(key, cancellationToken)` | Retrieves the singleton value associated with `key`, creating and caching it if it does not already exist. Successful retrieval resets that key's sliding expiration. | A task whose result is the value returned by get. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.TryGet(key, value)` | Attempts to retrieve a cached value for `key` without initializing it if missing. Successful retrieval resets that key's sliding expiration. | true if the requested update was applied; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.GetSync(key, cancellationToken)` | Synchronously retrieves the singleton value associated with `key`, creating and caching it if it does not already exist. Successful retrieval resets that key's sliding expiration. | The resulting value. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.Get(state, keyFactory, cancellationToken)` | Retrieves the singleton value associated with a key derived from `state`. Successful retrieval resets that key's sliding expiration. | A task whose result is the value returned by get. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.GetSync(state, keyFactory, cancellationToken)` | Synchronously retrieves the singleton value associated with a key derived from `state`. Successful retrieval resets that key's sliding expiration. | The resulting value. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.Initialize(state, factory)` | Configures the stateful initialization function used to create values for missing keys. | The resulting sliding Expiration Singleton Key Dictionary. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.SetInitialization(func)` | Sets the async initialization function used to create values for a key. | Returns no value; the requested change is complete when the method returns. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.TryRemove(key, value)` | Removes the cached value without disposing it and cancels its sliding expiration. | true if removes the cached value without disposing it and cancels its sliding expiration; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.TryRemoveAndDispose(key)` | Removes and disposes the cached value if present and cancels its sliding expiration. | true if removes and disposes the cached value if present and cancels its sliding expiration; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.TryRemoveAndDisposeSync(key)` | Synchronously removes and disposes the cached value if present and cancels its sliding expiration. | true if synchronously removes and disposes the cached value if present and cancels its sliding expiration; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.Remove(key, cancellationToken)` | Removes and disposes the cached value if present and cancels its sliding expiration. | true if removes and disposes the cached value if present and cancels its sliding expiration; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.RemoveSync(key, cancellationToken)` | Synchronously removes and disposes the cached value if present and cancels its sliding expiration. | true if synchronously removes and disposes the cached value if present and cancels its sliding expiration; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.Evict(key, cancellationToken)` | Strongly evicts the cached value if present and cancels its sliding expiration. | true if strongly evicts the cached value if present and cancels its sliding expiration; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.EvictSync(key, cancellationToken)` | Synchronously strongly evicts the cached value if present and cancels its sliding expiration. | true if synchronously strongly evicts the cached value if present and cancels its sliding expiration; otherwise, false. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.GetAllSync()` | Retrieves a snapshot of all cached key/value pairs without resetting sliding expirations. | The requested dictionary. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.GetAll(cancellationToken)` | Retrieves a snapshot of all cached key/value pairs without resetting sliding expirations. | A task whose result is the requested dictionary. |
-| `ISlidingExpirationSingletonKeyDictionary<TKey, TValue>.GetKeysSync()` | Retrieves a snapshot of all cached keys without resetting sliding expirations. | The requested collection. |
+This API returns the cached value directly. It cannot know how long the caller continues using that reference, so the timer may dispose a value while application code still holds it.
 
-## Practical notes
+Use this package for immutable/non-disposable values, or only where callers finish well inside the idle period and external coordination prevents expiry. For database connections, clients, streams, or other owned disposable resources, use `Soenneker.Dictionaries.SingletonKeys.LeasedExpiration`; its lease keeps the value alive until the caller releases it.
 
-- Cancellation stops pending work; it does not undo work that has already completed.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+## Removal and snapshots
+
+```csharp
+bool removed = await results.Remove("customer:42", cancellationToken);
+
+Dictionary<string, LookupResult> snapshot = await results.GetAll(cancellationToken);
+```
+
+`Remove`, `TryRemoveAndDispose`, and `Evict` remove and dispose the value. `TryRemove(key, out value)` cancels expiration but transfers value ownership to the caller without disposing it.
+
+`GetAll`, `GetKeys`, and `GetValues` return new collections and do not refresh idle timers. They inspect entries one at a time rather than freezing all mutations globally, so treat them as observational snapshots under concurrent activity.
+
+`Clear` removes all current entries, cancels their timers, and disposes their values. Dictionary disposal is terminal. Both operations can invalidate references already returned to callers, which is another reason to use the leased variant when value lifetime matters.
+
+Each cached key owns a timer. Consider a centralized/bucketed expiration design for very high key cardinality.
