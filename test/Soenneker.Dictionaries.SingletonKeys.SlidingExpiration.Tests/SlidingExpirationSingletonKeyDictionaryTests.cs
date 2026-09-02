@@ -14,7 +14,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Get_reuses_value_before_sliding_expiration()
+    public async Task Get_reuses_value_before_sliding_expiration(CancellationToken cancellationToken)
     {
         var calls = 0;
         var dict = new SlidingExpirationSingletonKeyDictionary<string, string>(TimeSpan.FromMilliseconds(200), key =>
@@ -23,9 +23,9 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
             return $"value-{key}";
         });
 
-        string first = await dict.Get("a");
+        string first = await dict.Get("a", cancellationToken: cancellationToken);
         await Task.Delay(50);
-        string second = await dict.Get("a");
+        string second = await dict.Get("a", cancellationToken: cancellationToken);
 
         first.Should().Be("value-a");
         second.Should().BeSameAs(first);
@@ -35,17 +35,17 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Get_resets_sliding_expiration()
+    public async Task Get_resets_sliding_expiration(CancellationToken cancellationToken)
     {
         var disposed = 0;
 
         var dict = new SlidingExpirationSingletonKeyDictionary<string, DisposableValue>(TimeSpan.FromMilliseconds(140),
             key => new DisposableValue(() => Interlocked.Increment(ref disposed)));
 
-        DisposableValue first = await dict.Get("a");
+        DisposableValue first = await dict.Get("a", cancellationToken: cancellationToken);
 
         await Task.Delay(90);
-        DisposableValue second = await dict.Get("a");
+        DisposableValue second = await dict.Get("a", cancellationToken: cancellationToken);
 
         second.Should().BeSameAs(first);
 
@@ -62,7 +62,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Expiration_disposes_value_and_next_get_recreates()
+    public async Task Expiration_disposes_value_and_next_get_recreates(CancellationToken cancellationToken)
     {
         var calls = 0;
         var disposed = 0;
@@ -74,14 +74,14 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
                 return new DisposableValue(() => Interlocked.Increment(ref disposed));
             });
 
-        DisposableValue first = await dict.Get("a");
+        DisposableValue first = await dict.Get("a", cancellationToken: cancellationToken);
 
         await Task.Delay(180);
 
         disposed.Should().Be(1);
         dict.TryGet("a", out _).Should().BeFalse();
 
-        DisposableValue second = await dict.Get("a");
+        DisposableValue second = await dict.Get("a", cancellationToken: cancellationToken);
 
         second.Should().NotBeSameAs(first);
         calls.Should().Be(2);
@@ -90,16 +90,16 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Remove_cancels_expiration_timer()
+    public async Task Remove_cancels_expiration_timer(CancellationToken cancellationToken)
     {
         var disposed = 0;
 
         var dict = new SlidingExpirationSingletonKeyDictionary<string, DisposableValue>(TimeSpan.FromMilliseconds(60),
             key => new DisposableValue(() => Interlocked.Increment(ref disposed)));
 
-        _ = await dict.Get("a");
+        _ = await dict.Get("a", cancellationToken: cancellationToken);
 
-        bool removed = await dict.Remove("a");
+        bool removed = await dict.Remove("a", cancellationToken: cancellationToken);
 
         removed.Should().BeTrue();
         disposed.Should().Be(1);
@@ -112,7 +112,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Different_keys_initialize_concurrently()
+    public async Task Different_keys_initialize_concurrently(CancellationToken cancellationToken)
     {
         var started = 0;
         var bothStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -145,7 +145,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
 
         async Task<string> Get(string key)
         {
-            return await dict.Get(key);
+            return await dict.Get(key, cancellationToken: cancellationToken);
         }
     }
 
