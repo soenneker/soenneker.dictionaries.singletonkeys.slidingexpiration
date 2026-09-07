@@ -560,11 +560,11 @@ public sealed class SlidingExpirationSingletonKeyDictionary<TKey, TValue> : ISli
         {
             SlidingExpirationEntry<TKey, TValue> entry = kvp.Value;
 
-            if (!TryRemoveEntry(kvp.Key, entry))
-                continue;
-
             using (await entry.Lock.Lock(cancellationToken).NoSync())
             {
+                if (!TryRemoveEntry(kvp.Key, entry))
+                    continue;
+
                 await entry.DisposeTimerAsync().NoSync();
 
                 if (entry.TryTakeValue(out TValue? value))
