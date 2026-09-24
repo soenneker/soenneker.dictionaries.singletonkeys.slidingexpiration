@@ -27,4 +27,7 @@
         <ProjectReference Include="..\..\src\Soenneker.Dictionaries.SingletonKeys.SlidingExpiration\Soenneker.Dictionaries.SingletonKeys.SlidingExpiration.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="AwesomeAssertions" Version="9.6.0" />
+    </ItemGroup>
 </Project>
