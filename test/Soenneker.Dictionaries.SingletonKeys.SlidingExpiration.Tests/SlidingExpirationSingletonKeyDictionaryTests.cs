@@ -14,7 +14,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Get_reuses_value_before_sliding_expiration(CancellationToken cancellationToken)
+    public async ValueTask Get_reuses_value_before_sliding_expiration(CancellationToken cancellationToken)
     {
         var calls = 0;
         var dict = new SlidingExpirationSingletonKeyDictionary<string, string>(TimeSpan.FromMilliseconds(200), key =>
@@ -35,7 +35,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Get_resets_sliding_expiration(CancellationToken cancellationToken)
+    public async ValueTask Get_resets_sliding_expiration(CancellationToken cancellationToken)
     {
         var disposed = 0;
 
@@ -62,7 +62,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Expiration_disposes_value_and_next_get_recreates(CancellationToken cancellationToken)
+    public async ValueTask Expiration_disposes_value_and_next_get_recreates(CancellationToken cancellationToken)
     {
         var calls = 0;
         var disposed = 0;
@@ -90,7 +90,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Remove_cancels_expiration_timer(CancellationToken cancellationToken)
+    public async ValueTask Remove_cancels_expiration_timer(CancellationToken cancellationToken)
     {
         var disposed = 0;
 
@@ -112,7 +112,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
     }
 
     [Test]
-    public async Task Different_keys_initialize_concurrently(CancellationToken cancellationToken)
+    public async ValueTask Different_keys_initialize_concurrently(CancellationToken cancellationToken)
     {
         var started = 0;
         var bothStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
