@@ -24,7 +24,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
         });
 
         string first = await dict.Get("a", cancellationToken: cancellationToken);
-        await Task.Delay(50);
+        await Task.Delay(50, cancellationToken: cancellationToken);
         string second = await dict.Get("a", cancellationToken: cancellationToken);
 
         first.Should().Be("value-a");
@@ -44,17 +44,17 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
 
         DisposableValue first = await dict.Get("a", cancellationToken: cancellationToken);
 
-        await Task.Delay(90);
+        await Task.Delay(90, cancellationToken: cancellationToken);
         DisposableValue second = await dict.Get("a", cancellationToken: cancellationToken);
 
         second.Should().BeSameAs(first);
 
-        await Task.Delay(90);
+        await Task.Delay(90, cancellationToken: cancellationToken);
         dict.TryGet("a", out DisposableValue? stillCached).Should().BeTrue();
         stillCached.Should().BeSameAs(first);
         disposed.Should().Be(0);
 
-        await Task.Delay(220);
+        await Task.Delay(220, cancellationToken: cancellationToken);
         disposed.Should().Be(1);
         dict.TryGet("a", out _).Should().BeFalse();
 
@@ -76,7 +76,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
 
         DisposableValue first = await dict.Get("a", cancellationToken: cancellationToken);
 
-        await Task.Delay(180);
+        await Task.Delay(180, cancellationToken: cancellationToken);
 
         disposed.Should().Be(1);
         dict.TryGet("a", out _).Should().BeFalse();
@@ -104,7 +104,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
         removed.Should().BeTrue();
         disposed.Should().Be(1);
 
-        await Task.Delay(150);
+        await Task.Delay(150, cancellationToken: cancellationToken);
 
         disposed.Should().Be(1);
 
@@ -131,7 +131,7 @@ public sealed class SlidingExpirationSingletonKeyDictionaryTests : HostedUnitTes
         Task<string> first = Get("a");
         Task<string> second = Get("b");
 
-        bool bothFactoriesStarted = await Task.WhenAny(bothStarted.Task, Task.Delay(TimeSpan.FromSeconds(1))) ==
+        bool bothFactoriesStarted = await Task.WhenAny(bothStarted.Task, Task.Delay(TimeSpan.FromSeconds(1), cancellationToken: cancellationToken)) ==
                                     bothStarted.Task;
 
         bothStarted.TrySetResult();
